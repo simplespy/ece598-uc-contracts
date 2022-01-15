@@ -3,6 +3,7 @@ import uc.itm
 from uc.itm import GenChannel, waits, ITM
 from gevent import wait
 
+# Working with Channels
 
 def Echo( q2p, p2q ):
     x = waits(q2p)
@@ -30,9 +31,8 @@ class EchoITM(ITM):
         ITM.__init__(self, k, None, None, None, channels, handlers, None)
         
     def handler_echo(self, msg):
-        print('Echo Handler received:', msg)
-        self.channels['p2q'].write('hi')
-        # self.write('p2q', msg)
+        print('Echo Handler secparam:', self.k, ' received:', msg)
+        self.write('p2q', msg)
 
 
 if __name__=='__main__':
@@ -54,9 +54,9 @@ if __name__=='__main__':
         q2p = GenChannel('q2p')
         q2p.write( "Hello World" )
         e = EchoITM(120, q2p, p2q)
-        gevent.spawn(e.run())
+        gevent.spawn(e.run)
         x = waits(p2q)
         print("test2 Received: ", x)
         return x
 
-    gevent.wait(test2())
+    test2()
