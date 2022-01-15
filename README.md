@@ -10,8 +10,6 @@ Installation is easy (we assume `python>=3.5`)
 
 If you're able to run `python uc/apps/coinflip/env.py` successfully and get output you're good to go!
 
-## Folder structure
-
 * `uc/`: Python UC module that implements the basic framework
   * `itm.py`: implements the ITM
   * `protocol.py`: the base class for all protocols and the `ProtocolWrapper` and the `DummyParty`
