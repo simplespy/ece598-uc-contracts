@@ -3,18 +3,20 @@ This is a python implementation of the UC framework alongside the changes requir
 
 
 ## Installation
-Use `pip install -r requirements.txt` to install all required pip modules for this project. Don't forget to run `pip install -e uc/` to install this `uc/` local module before running the codes inside this project. Python version is **>= 3.5.3**.
+Use `pip install -r uc/requirements.txt` to install all required pip modules for this project. Python version is **>= 3.5.3**.
+
+Run `pip install -e .` to install the `uc/` local module for development in this directory.
+
+The first test can be run as `python uc/apps/coinflip/env.py`.
 
 
 ## Folder structure
 
-`paper/`: Our proposed paper. Using Makefile to compile the PDF.
-
-`papers/`: Other reference papers.
-
 `uc/`: Python UC module
 
-`apps/`: Examples of using python UC module
+`uc/apps/`: Examples of using python UC module
+
+`uc/tutorial/`: Tutorials following along the SaUCy course
 
 
 ### Files under `uc/`
@@ -24,29 +26,22 @@ Use `pip install -r requirements.txt` to install all required pip modules for th
 
 `adversary.py`: basic class of adversary.
 
+`functionality.py`: basic class of functionality.
+
+`protocol.py`: basic class of protocol.
+
 `exeuc.py`: {execute|create} (wrapped)UC.
 
 `utils.py`: utility functions that are used by ITM.
 
-`sync_ours/`: Our implementation under synchronous assumption.
 
-`async_ours/`: Our implementation under asynchronous assumption. The postfix of `_bracha` refers to the [*Asynchornous Byzentine Agreement Protocols*](https://core.ac.uk/reader/82523202) proposed by Gabriel Bracha.
-
-`{sync|async}_ours/f_bracha.py`: ideal functionality + simulator
-
-`{sync|async}_ours/prot_bracha.py`: protocol
-
-`{sync|async}_ours/env1.py`: environment. It executes `ideal functionality` and `protocol`, and then run the distinguisher function to check that if the output transcripts are the same. It is falsifiable.
-
-`sync_katz/`: Katz's implementation under synchronous assumption ([ref](https://eprint.iacr.org/2011/310.pdf))
-
-
-### Files under `uc/`
-`bracha/`: example of bracha protocol
+### Files under `uc/apps/`
 
 `commitment/`: example of commitment protocol
 
-`payment/`: example of uni-directional payment channel
+`coinflip/`: example of coinflip protocol
+
+`simplecomp/`: example of a composition
 
 
 ## Other modules used in this project
