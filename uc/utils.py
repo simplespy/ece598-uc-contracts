@@ -24,7 +24,10 @@ def wait_for(_2_):
         dump.dump_wait()
         return None
 
-def waits(*cs):
+def fork(*args, **kwargs): return gevent.spawn(*args, **kwargs)
+
+def waits(*cs): return readChan(*cs)
+def readChan(*cs):
     r = gevent.wait(objects=[*cs],count=1)
     assert len(r) == 1
     r = r[0]
