@@ -9,6 +9,15 @@ Run `pip install -e .` to install the `uc/` local module for development in this
 
 The first test can be run as `python uc/apps/coinflip/env.py`.
 
+### Docker
+
+We include a simple Dockerfile based on python3.6, you can see there are not many dependencies
+
+```
+    docker build -t saucy .
+    docker run -v $PWD:/uc-contracts -it saucy
+```
+
 
 ## Folder structure
 
