@@ -8,6 +8,15 @@ Installation is easy (we assume `python>=3.5`)
 * Install the dependencies with ```pip install -r uc/requirements.txt```
 * Install the the `uc` module as a working module with ```pip install -e .```
 
+### Docker
+
+We include a simple Dockerfile based on python3.6, you can see there are not many dependencies
+
+```
+    docker build -t saucy .
+    docker run -v $PWD:/uc-contracts -it saucy
+```
+
 If you're able to run `python uc/apps/coinflip/env.py` successfully and get output you're good to go!
 
 * `uc/`: Python UC module that implements the basic framework
@@ -29,3 +38,6 @@ Protocols in UC are usually not in any kind of wrapper and therefore, from their
 A consequence of the wrapper is that the functionality, adversary, and environment need to know the `pid` of the messages received by the wrapper. 
 The parties themselves don't add their `pid` to messages because they "think" they are directly communicating to other with a dedicated channel. Therefore, the wrapper appends the `pid` of the sending parties to all outgoing messages by them.
 **See the docstring for the `ProtocolWrapper` for a more in depth explanation.**
+
+
+

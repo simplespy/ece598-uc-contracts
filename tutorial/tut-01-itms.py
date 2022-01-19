@@ -1,6 +1,7 @@
 import uc.itm
 
 from uc.itm import GenChannel, waits, ITM
+import gevent
 from gevent import wait
 
 # Working with Channels
