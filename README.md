@@ -39,5 +39,3 @@ A consequence of the wrapper is that the functionality, adversary, and environme
 The parties themselves don't add their `pid` to messages because they "think" they are directly communicating to other with a dedicated channel. Therefore, the wrapper appends the `pid` of the sending parties to all outgoing messages by them.
 **See the docstring for the `ProtocolWrapper` for a more in depth explanation.**
 
-
-
