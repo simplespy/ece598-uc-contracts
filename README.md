@@ -20,6 +20,10 @@ If you're able to run `python uc/apps/coinflip/env.py` successfully and get outp
   * `execuc.py`: executes a UC experiment given an environment, functionality, protocol, and adversary
   * `compose.py`: a composition operator for protocols and simulators
   * `utils.py`: some handy functions
+* `uc/apps/`: Examples of using the Python UC module
+  * `commitment/`: an example of a bit commitment in the random oracle model
+  * `coinflip/`: a coin flip that uses bit commitment
+  * `simplecomp/`: composition example, deplaces F_com with commitment protocol
 
 ## Things unique from the UC framework
 We use a construct called the `ProtocolWrapper` in `protocol.py`. This wrapper encapsulates the "protocol" and internaly creates instances of the protocol as protocol parties. It also routes messages to/from the protocol parties based on the intended `pid` recipient of the messages that it receives. 
