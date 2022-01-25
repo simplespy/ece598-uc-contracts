@@ -6,7 +6,7 @@ import secp256k1 as secp
 def env_honest(k, static, z2p, z2f, z2a, a2z, f2z, p2z, pump):
     print('\033[94m[ env_honest ]\033[0m')
 
-    sid = ('one', ("1, 2",))
+    sid = ('one', "1, 2")
     static.write( (('sid',sid), ('crupt',)))
 
     transcript = []
@@ -25,14 +25,16 @@ def env_honest(k, static, z2p, z2f, z2a, a2z, f2z, p2z, pump):
     g1 = gevent.spawn(_a2z)
     g2 = gevent.spawn(_p2z)
 
-    m = secp.uint256_from_str(os.urandom(32))
-    print('\n commiting to the point: \n\t{}\n'.format(m))
+    for i in range(2):
+        m = secp.uint256_from_str(os.urandom(32))
+        print('\n commiting to the point: \n\t{}\n'.format(m))
 
-    z2p.write( (1, ('commit', m)) )
-    waits(pump)
+        z2p.write( (1, ('commit', i, m)) )
+        waits(pump)
 
-    z2p.write( (1, ('reveal',)) )
-    waits(pump)
+    for i in range(2):
+        z2p.write( (1, ('reveal', i)) )
+        waits(pump)
     
     gevent.kill(g1)
     gevent.kill(g2)
@@ -44,9 +46,10 @@ from uc.adversary import DummyAdversary
 from uc.protocol import DummyParty
 from uc.execuc import execUC
 from f_crs import F_CRS
+from f_mcom import F_Mcom
 from prot_com import Commitment_Prot
 
-tideal = execUC(
+execUC(
     128,
     env_honest,
     F_CRS,
@@ -54,3 +57,10 @@ tideal = execUC(
     DummyAdversary
 )
     
+execUC(
+    128,
+    env_honest,
+    F_Mcom,
+    DummyParty,
+    DummyAdversary
+)
