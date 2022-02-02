@@ -33,6 +33,9 @@ class UCFunctionality(ITM):
         self.party_msgs = {}
         self.adv_msgs = {}
 
+        self.p_msg = lambda x: x[0]
+        self.p_parse = lambda x: x[1:]
+
     def is_honest(self, sid, pid):
         """Check if a party `pid` is corrupt or not.
 
@@ -77,8 +80,8 @@ class UCFunctionality(ITM):
             msg (tuple(pid,msg)): message from protocol party with `pid`.
         """
         sender,msg = m
-        if msg[0] in self.party_msgs:
-            self.party_msgs[msg[0]](sender, *msg[1:])
+        if self.p_msg(msg) in self.party_msgs:
+            self.party_msgs[self.p_msg(msg)](sender, *self.p_parse(msg))
         else:
             raise Exception('unknown message', msg)
             self.pump.write('')
