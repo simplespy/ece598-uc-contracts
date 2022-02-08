@@ -31,7 +31,9 @@ class UCProtocol(ITM):
             channels['z2p'] : self.env_msg,
             channels['f2p'] : self.func_msg,
         }
-        ITM.__init__(self, k, bits, sid, pid, channels, self.handlers, pump)
+
+        to_write = ['p2z', 'p2f']
+        ITM.__init__(self, k, bits, sid, pid, channels, self.handlers, to_write, pump)
         self.f = lambda x: x[0]
         self.parse = lambda x: x[1:]
         self.env_msgs = {}
@@ -59,7 +61,7 @@ class UCProtocol(ITM):
         if self.f(msg) in self.func_msgs:
             self.func_msgs[self.f(msg)](*(self.parse(msg)))
         else:
-            self.pump.write('')
+            raise Exception('Message from functionality not accepted: {}'.format(msg))
 
     def env_msg(self, msg):
         """ Handlers for messages from Z. msg[0] is the type of the message
@@ -71,7 +73,7 @@ class UCProtocol(ITM):
         if msg[0] in self.env_msgs:
             self.env_msgs[msg[0]](*msg[1:])
         else:
-            self.pump.write('')
+            raise Exception('Message from Environment not accepted: {}'.format(msg))
 
 class DummyParty(ITM):
     """ The dummy party that passes through all the messages directly to the functionality and back to
@@ -84,7 +86,8 @@ class DummyParty(ITM):
             channels['a2p'] : self.adv_msg,
             channels['f2p'] : self.func_msg
         }
-        ITM.__init__(self, k, bits, sid, pid, channels, self.handlers, pump)
+        to_write = ['p2z', 'p2f']
+        ITM.__init__(self, k, bits, sid, pid, channels, self.handlers, to_write, pump)
 
     def adv_msg(self, msg):
         self.write('p2f', msg)
@@ -137,7 +140,8 @@ class ProtocolWrapper(ITM):
             channels['a2p'] : self.adv_msg,
             channels['f2p'] : self.func_msg,
         }
-        ITM.__init__(self, k, bits, sid, None, channels, self.handlers, pump)
+        to_write = ['p2f', 'p2a', 'p2z']
+        ITM.__init__(self, k, bits, sid, None, channels, self.handlers, to_write, pump)
 
     def is_dishonest(self, pid):
         """ Check is party `pid` is corrupt.
