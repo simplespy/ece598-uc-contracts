@@ -2,6 +2,9 @@ from uc import UCFunctionality
 import logging
 from ast import literal_eval
 from collections import defaultdict
+import rsa
+import secp256k1 as secp
+
 
 log = logging.getLogger(__name__)
 
@@ -19,18 +22,18 @@ class F_CRO_FC(UCFunctionality):
         self.party_msgs['sendmsg'] = self.sendmsg
         self.party_msgs['getLeaks'] = self.getLeaks
 
-        self.adv_msgs['hash'] = self.ahash 
-
         self.cnt_eval = defaultdict(set)
         self.cnt_inv = defaultdict(set)
 
         self.leakBuf = []
 
+        (self.pk, self.sk) = rsa.newkeys(512)
+
     def _hash(self, x):
         if x not in self.table:
             v = self.sample(self.k)
             self.table[x] = v
-            self.inv_table[v] = x
+            self.inv_table[v] = pow(v, self.sk.d, self.pk.n)
         return self.table[x]
 
     def c_evaluate(self, sender, to, msg):
@@ -97,7 +100,7 @@ class F_CRO_FC(UCFunctionality):
 
     def getLeaks(self, sender):
         if sender == 0:
-            self.write('f2p', (0, ('leakBuf', self.leakBuf)))
+            self.write('f2a', ('leakBuf', self.leakBuf))
         else:
             self.pump.write('')
 

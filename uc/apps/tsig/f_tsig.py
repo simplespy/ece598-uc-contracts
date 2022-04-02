@@ -16,7 +16,6 @@ class F_tsig(UCFunctionality):
         self.party_msgs['sign'] = self.sign
         self.party_msgs['send'] = self.send
         self.party_msgs['getLeaks'] = self.getLeaks
-        self.party_msgs['getSignature'] = self.getSignature
 
         self.leakBuf = []
 
@@ -48,15 +47,10 @@ class F_tsig(UCFunctionality):
 
     def getLeaks(self, sender):
         if sender == 0:
-            self.write('f2p', (0, ('leakBuf', self.leakBuf)))
+            self.write('f2a', ('leakBuf', self.leakBuf))
         else:
             self.pump.write('')
 
-    def getSignature(self, sender, msg):
-        if sender in self.see[msg]:
-            self.write('f2p', (sender, ('signature', msg)))
-        else:
-            self.pump.write('')
 
 
 

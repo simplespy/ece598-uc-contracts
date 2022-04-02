@@ -18,6 +18,8 @@ class Tsig_Prot(UCProtocol):
 
         self.env_msgs['sign'] = self.env_sign
         self.env_msgs['send'] = self.env_send
+        self.env_msgs['getLeaks'] = self.env_leak
+
         self.func_msgs['evaluate'] = self.recv_evaluate
         self.func_msgs['invert'] = self.recv_invert
         self.func_msgs['recvmsg'] = self.func_receive
@@ -62,6 +64,15 @@ class Tsig_Prot(UCProtocol):
             self.write( ch='p2z', msg=('send', fro, m))
         if msg[0] == 'evaluate':
             self.write( ch='p2f', msg=msg)
+
+    def env_leak(self):
+        if self.pid == 0:
+            self.write('p2f', ('getLeaks', ))
+        else:
+            self.pump.write('')
+
+
+
         
         
 

@@ -1,6 +1,7 @@
 from uc.utils import waits, collectOutputs
 import os
 import gevent
+import secp256k1 as secp
 
 def env_honest(k, static, z2p, z2f, z2a, a2z, f2z, p2z, pump):
     print('\033[94m[ env_honest ]\033[0m')
@@ -28,7 +29,7 @@ def env_honest(k, static, z2p, z2f, z2a, a2z, f2z, p2z, pump):
     g2 = gevent.spawn(_p2z)
 
     # party 2, 3 give the permission to sign m to party 1
-    m = os.urandom(32).hex()
+    m = secp.uint256_from_str(os.urandom(32))
     for i in range(2, 4):
         print('\n sign the message: \n\t{}\n'.format(m))
         z2p.write( (i, ('sign', 1, m)) )
@@ -37,6 +38,9 @@ def env_honest(k, static, z2p, z2f, z2a, a2z, f2z, p2z, pump):
     # party 1 send signature of m to party 4
     z2p.write( (1, ('send', 4, m)) )
     waits(pump)
+
+    #z2p.write((0, ('getLeaks', )))
+    #waits(pump)
     
     gevent.kill(g1)
     gevent.kill(g2)
@@ -90,6 +94,7 @@ treal = execUC(
     Tsig_Prot,
     DummyAdversary
 )
+
 print('\nideal\n')
 tideal = execUC(
     128,
