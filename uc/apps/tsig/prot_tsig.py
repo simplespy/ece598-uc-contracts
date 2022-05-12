@@ -11,14 +11,15 @@ class Tsig_Prot(UCProtocol):
     def __init__(self, k, bits, sid, pid, channels, pump):
         UCProtocol.__init__(self, k, bits, sid, pid, channels, pump) 
         self.ssid,sid = sid
-        parties = literal_eval(sid)
+        sid = literal_eval(sid)
         self.n = sid[0]
         self.c = sid[1]
+        self.t = sid[2]
         self.pid = pid
 
         self.env_msgs['sign'] = self.env_sign
         self.env_msgs['send'] = self.env_send
-        self.env_msgs['getLeaks'] = self.env_leak
+        self.env_msgs['getBuf'] = self.env_getBuf
 
         self.func_msgs['evaluate'] = self.recv_evaluate
         self.func_msgs['invert'] = self.recv_invert
@@ -28,48 +29,63 @@ class Tsig_Prot(UCProtocol):
         self.cnt = {}
         self.eval = None
         self.inv = None
+        self.to = None
 
     def env_sign(self, to, msg):
         self.to = to
-        self.write( ch='p2f', msg=('evaluate', self.pid, msg))
-
-        #for i in range(1, int(self.n)):
-        #    if i != self.pid:
-        #        self.write( ch='p2f', msg=('sendmsg', i, ('evaluate', self.pid, msg)))
-        #        waits(self.pump)
+        self.write( ch='p2f', msg=('broadcast', ('evaluate_all', msg)))
         
-
     def env_send(self, to, msg):
-        print('env_send', self.pid, self.eval, self.inv)
-        if self.inv is not None:
+        print('[Ptsig] env_send', self.pid, self.eval, self.inv)
+        if self.inv is not None and self.eval is not None:
             self.write('p2f', ('sendmsg', to, ('send', msg, self.inv)))
 
     def recv_evaluate(self, m, hm):
-        print(self.pid, 'recv_evaluate')
+        print('[Ptsig]', self.pid, 'recv_evaluate')
         self.eval = hm
-        self.write( ch='p2f', msg=('invert', self.to, hm))
+        if self.to is not None:
+            self.write( ch='p2f', msg=('invert', self.to, hm))
+        waits(self.pump)
         
-
     def recv_invert(self, m):
-        print(f'[{self.pid}, recv_invert]')
+        print(f'[Ptsig] [{self.pid}, recv_invert]')
         self.inv = m
-        self.write( ch='p2z', msg=('signature', m))
+        if self.eval is not None:
+            self.write( ch='p2z', msg=('signature', m))
+        waits(self.pump)
         
-
     def func_receive(self, fro, msg):
-        print(f'[{self.pid}, receive]', msg, 'from', fro)
+        print(f'[Ptsig] [{self.pid}, receive]', msg, 'from', fro)
         if msg[0] == 'send':
             m = msg[1]
             inv = msg[2]
             self.write( ch='p2z', msg=('send', fro, m))
-        if msg[0] == 'evaluate':
-            self.write( ch='p2f', msg=msg)
 
-    def env_leak(self):
+    def env_getBuf(self):
         if self.pid == 0:
-            self.write('p2f', ('getLeaks', ))
+            self.write('p2f', ('getBuf', ))
         else:
-            self.pump.write('')
+            m = self.write_and_wait_for( ch='p2f', msg=('getBuf', ), read='f2p' )
+            print('[Ptsig]', self.pid)
+            msgs = list(m[1])
+            if len(msgs) == 0: self.pump.write('0')
+            print('[Ptsig]', self.pid, msgs)
+            for msg in msgs:
+                if msg[0] == 'evaluate_all':
+                    self.write(ch='p2f', msg=msg)
+                    waits(self.pump)
+                if msg[0] == 'evaluate':
+                    self.recv_evaluate(msg[1], msg[2])
+                    
+                if msg[0] == 'invert':
+                    self.recv_invert(msg[1])
+                    
+
+
+
+                    
+
+            
 
 
 

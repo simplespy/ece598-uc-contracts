@@ -11,8 +11,8 @@ def env_honest(k, static, z2p, z2f, z2a, a2z, f2z, p2z, pump):
     c = 2
     t = 0
 
-    sid = ('one', f"({n}, {c}, {t})") # c, t
-    static.write( (('sid',sid), ('crupt',)))
+    sid = ('one', f"({n}, {t})")
+    static.write( (('sid',sid), ('crupt', )))
 
     transcript = []
     msgs = []
@@ -30,35 +30,37 @@ def env_honest(k, static, z2p, z2f, z2a, a2z, f2z, p2z, pump):
             msgs.append(m)
             pump.write('dump')
 
-    def read_buf():
+    def read_buf(x):
         print('[env] read buf')
-        while True:
-            empty = True
-            for i in range(1, n + 1):  
-                z2p.write((i, ('getBuf', )))
-                time.sleep(1.5)
-                m = waits(pump)
-                print('[env] buffer state', m)
-                if m != '0': empty = False
-            if empty: break
+        for i in range(t + 1, n + 1): 
+            z2p.write((i, (f'getBuf', x)))
+            m = waits(pump)
 
+        print('[env] red buf from adv')
+        for i in range(1, t + 1):
+            z2a.write(('A2F', ('getBuf', x, i)))
+            waits(pump)
+            
 
     g1 = gevent.spawn(_a2z)
     g2 = gevent.spawn(_p2z)
 
-    # party 2, 3 give the permission to sign m to party 1
-    m = secp.uint256_from_str(os.urandom(32))
-    for i in range(2, 4):
-        print(f'[env] party {i} give the permission to sign {m} to party 1')
-        z2p.write( (i, ('sign', 1, m)) )
-        waits(pump)
+    vid = 1
+    votes = [0, 1, 1, 1, 1]
 
-    read_buf()
+    # honest party 1, 2, 3, 4 vote for 1
+    for i in range(t + 1, n + 1):
+        print(f'[env] party {i} sends vote {votes[i]}')
+        z2p.write( (i, ('vote', vid, votes[i])) )
+        m = waits(pump)
 
-    # party 1 send signature of m to party 4
-    z2p.write( (1, ('send', 4, m)) )
-    waits(pump)
+    read_buf(2)
+    read_buf(1)
     
+    for i in range(t + 1, n + 1):
+        print(f'[env] party {i} getOutput')        
+        z2p.write( (i, ('getOutput', vid)) )
+        waits(pump)
     gevent.kill(g1)
     gevent.kill(g2)
     
@@ -99,16 +101,16 @@ def distinguisher(t_ideal, t_real):
 from uc.adversary import DummyAdversary
 from uc.protocol import DummyParty
 from uc.execuc import execUC
-from f_tsig import F_tsig
-from f_ro import F_CRO_FC
-from prot_tsig import Tsig_Prot
+from f_tsigs import F_tsigs
+from f_ba import F_ba
+from prot_ba import BA_Prot
 
 print('\nreal\n')
 treal = execUC(
     128,
     env_honest,
-    F_CRO_FC,
-    Tsig_Prot,
+    F_tsigs,
+    BA_Prot,
     DummyAdversary
 )
 
@@ -116,9 +118,9 @@ print('\nideal\n')
 tideal = execUC(
     128,
     env_honest,
-    F_tsig,
+    F_ba,
     DummyParty,
     DummyAdversary
 )
 
-#distinguisher(tideal, treal)
+distinguisher(tideal, treal)

@@ -17,15 +17,18 @@ class F_CRO_FC(UCFunctionality):
         sid = literal_eval(sid[1])
         self.n = sid[0]
         self.c = sid[1]
+        self.t = sid[2]
         self.party_msgs['evaluate'] = self.evaluate
+        self.party_msgs['evaluate_all'] = self.evaluate_all
         self.party_msgs['invert'] = self.invert
+        self.party_msgs['broadcast'] = self.broadcast
+        self.party_msgs['getBuf'] = self.getBuf
         self.party_msgs['sendmsg'] = self.sendmsg
-        self.party_msgs['getLeaks'] = self.getLeaks
 
         self.cnt_eval = defaultdict(set)
         self.cnt_inv = defaultdict(set)
 
-        self.leakBuf = []
+        self.msgBuf = defaultdict(set)
 
         (self.pk, self.sk) = rsa.newkeys(512)
 
@@ -36,50 +39,54 @@ class F_CRO_FC(UCFunctionality):
             self.inv_table[v] = pow(v, self.sk.d, self.pk.n)
         return self.table[x]
 
-    def c_evaluate(self, sender, to, msg):
+    def evaluate(self, sender, to, msg):
         print(f'[F_ro, evaluate] ({to}, {msg}) from {sender}')
 
+        #self.add_msg(0, ('evaluate', sender, to, msg))
+        #self.add_msg(to, ('evaluate', sender, to, msg))
         self.cnt_eval[msg].add(sender)
         self.cnt_eval[(to, msg)].add(sender)
-        self.leak(str(('evaluate', sender, to, msg)))
-        
+
         if len(self.cnt_eval[msg]) == self.c:
-            self.leak(str(('evaluate', self._hash(msg))))
+            self.add_msg(0, ('evaluate', self._hash(msg)))
 
         if len(self.cnt_eval[(to, msg)]) == self.c:
-            print('can evaluate')
-            self.write(
-                ch='f2p',
-                msg=(to, ('evaluate', msg, self._hash(msg)))
-            )
+            self.add_msg(to, ('evaluate', msg, self._hash(msg)))
 
-        else:
-            self.pump.write('')
+        self.pump.write('back from evaluate')  
 
-    def evaluate(self, sender, to, msg):
-        self.write(
-            ch='f2p',
-            msg=(to, ('evaluate', msg, self._hash(msg)))
-        )
+    def evaluate_all(self, sender, msg):
+        for to in range(1, self.n + 1):
+            print(f'[F_ro, evaluate_all] ({to}, {msg}) from {sender}')
 
-        
+            #self.add_msg(0, ('evaluate', sender, to, msg))
+            #self.add_msg(to, ('evaluate', sender, to, msg))
+            self.cnt_eval[msg].add(sender)
+            self.cnt_eval[(to, msg)].add(sender)
+
+            if len(self.cnt_eval[msg]) == self.c:
+                self.add_msg(0, ('evaluate', self._hash(msg)))
+
+            if len(self.cnt_eval[(to, msg)]) == self.c:
+                self.add_msg(to, ('evaluate', msg, self._hash(msg)))
+
+        self.pump.write('back from evaluate_all')
 
     def invert(self, sender, to, msg):
         print(f'[F_ro, invert] ({to}, {msg}) from {sender}')
+        #self.add_msg(0, ('invert', sender, to, msg))
+        #self.add_msg(to, ('invert', sender, to, msg))
         self.cnt_inv[msg].add(sender)
         self.cnt_inv[(to, msg)].add(sender)
-        self.leak(str(('invert', sender, to, msg)))
         
         if len(self.cnt_inv[msg]) == self.c:
-            self.leak(str(('invert', self.inv_table[msg])))
+            self.add_msg(0, ('invert', self.inv_table[msg]))
 
         if len(self.cnt_inv[(to, msg)]) == self.c:
-            self.write(
-                ch='f2p',
-                msg=(to, ('invert', self.inv_table[msg]))
-            )
-        else:
-            self.pump.write('')
+            #print(f'[F_ro, invert] {msg} to {sender}')
+            self.write('f2p', (to, ('invert', self.inv_table[msg])))
+            
+        else: self.pump.write('back from invert')
 
 
     def ahash(self, s):
@@ -90,18 +97,24 @@ class F_CRO_FC(UCFunctionality):
 
     def sendmsg(self, sender, to, msg):
         print('[F_ro, sendmsg] from {} to {}: {}'.format(sender, to, msg))
-        self.write(
-            ch='f2p',
-            msg=(to, ('recvmsg', sender, msg)),
-        )
+        self.write('f2p', (to, ('recvmsg', sender, msg)))
 
-    def leak(self, msg):
-        self.leakBuf.append(msg)
+    def broadcast(self, sender, msg):
+        for to in range(1, self.n + 1):
+            self.msgBuf[to].add(msg)
+        self.pump.write('back from broadcast')
 
-    def getLeaks(self, sender):
+    def add_msg(self, to, msg):
+        self.msgBuf[to].add(msg)
+
+    def getBuf(self, sender):
+        
         if sender == 0:
-            self.write('f2a', ('leakBuf', self.leakBuf))
+            self.write('f2a', ('msgBuf', self.msgBuf[sender]))
+
         else:
-            self.pump.write('')
+            self.write('f2p', (sender, ('msgBuf', self.msgBuf[sender])))
+
+        self.msgBuf[sender] = set()
 
 

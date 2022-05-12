@@ -9,47 +9,73 @@ class F_tsig(UCFunctionality):
         sid = literal_eval(sid[1])
         self.n = sid[0]
         self.c = sid[1]
+        self.t = sid[2]
+
+        print(f'[Ftsig] This is ({self.c}, {self.t})-signature')
 
         self.see = defaultdict(set)
         self.cnt = defaultdict(set)
 
         self.party_msgs['sign'] = self.sign
+        self.party_msgs['sign_batch'] = self.sign_batch
         self.party_msgs['send'] = self.send
-        self.party_msgs['getLeaks'] = self.getLeaks
+        self.party_msgs['getBuf'] = self.getBuf
 
-        self.leakBuf = []
+        self.msgBuf = defaultdict(list)
 
     def sign(self, sender, to, msg):
-        #self.write('f2p', (to, ('sign', sender, to, msg)))
-        self.leak(str(('sign', sender, to, msg)))
+        self.add_msg(0, ('sign', sender, to, msg))
+        self.add_msg(to, ('sign', sender, to, msg))
         self.cnt[(to, msg)].add(sender)
         self.cnt[msg].add(sender)
 
         if len(self.cnt[msg]) == self.c:
             self.see[msg].add(0)
-            self.leak(str(('signature', msg)))
+            self.add_msg(0, ('signature', msg))
 
         if len(self.cnt[(to, msg)]) == self.c:
             self.see[msg].add(to)
-            self.write('f2p', (to, ('signature', msg)))
+            self.add_msg(to, ('signature', msg))
 
-        else:
-            self.pump.write('')
+        self.pump.write('')
+
+    def sign_batch(self, sender, to_list, msg):
+        for to in to_list:
+            self.add_msg(0, ('sign', sender, to, msg))
+            self.add_msg(to, ('sign', sender, to, msg))
+            self.cnt[(to, msg)].add(sender)
+            self.cnt[msg].add(sender)
+
+            if len(self.cnt[msg]) == self.c:
+                self.see[msg].add(0)
+                self.add_msg(0, ('signature', msg))
+
+            if len(self.cnt[(to, msg)]) == self.c:
+                self.see[msg].add(to)
+                self.add_msg(to, ('signature', msg))
+
+        self.pump.write('')
             
     def send(self, sender, to, msg):
         if sender in self.see[msg]:
             self.see[msg].add(to)
+            self.add_msg(0, ('send', sender, msg))
             self.write('f2p', (to, ('send', sender, msg)))
-            self.leak(str(('send', sender, msg)))
+            
 
-    def leak(self, msg):
-        self.leakBuf.append(msg)
+    def add_msg(self, to, msg):
+        self.msgBuf[to].append(msg)
 
-    def getLeaks(self, sender):
-        if sender == 0:
-            self.write('f2a', ('leakBuf', self.leakBuf))
+    def getBuf(self, sender):
+        if len(self.msgBuf[sender]) == 0: self.pump.write('0')
         else:
-            self.pump.write('')
+            if sender == 0:
+                self.write('f2a', ('msgBuf', self.msgBuf[sender]))
+
+            else:
+                self.write('f2p', (sender, ('msgBuf', self.msgBuf[sender])))
+
+            self.msgBuf[sender] = []
 
 
 
