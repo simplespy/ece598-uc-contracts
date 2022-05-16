@@ -37,7 +37,8 @@ def env_case1(k, static, z2p, z2f, z2a, a2z, f2z, p2z, pump):
 
     def read_buf(x):
         print('[env] read buf')
-        for i in range(t + 1, n + 1):
+        for i in range(1, n + 1):
+            if i in crupt: continue
             z2p.write((i, (f'getBuf', x)))
             m = waits(pump)
 

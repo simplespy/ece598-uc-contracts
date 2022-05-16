@@ -59,8 +59,11 @@ class F_tsig(UCFunctionality):
     def send(self, sender, to, msg):
         if sender in self.see[msg]:
             self.see[msg].add(to)
-            self.add_msg(0, ('send', sender, msg))
-            self.write('f2p', (to, ('send', sender, msg)))
+            self.write('f2a', ('send', sender, msg))
+            self.add_msg(to, ('send', sender, msg))
+
+
+            #self.write('f2p', (to, ('send', sender, msg)))
             
 
     def add_msg(self, to, msg):

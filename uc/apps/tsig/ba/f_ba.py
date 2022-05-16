@@ -23,6 +23,7 @@ class F_ba(UCFunctionality):
         self.adv_msgs['vote'] = self.vote_by_adv
         self.adv_msgs['getBuf'] = self.get_buf
         self.adv_msgs['writeBuf'] = self.write_buf
+        self.party_msgs['getTranscript'] = self.get_transcript
 
         self.adv_vote = {}
         self.outputs = {}
@@ -67,4 +68,7 @@ class F_ba(UCFunctionality):
         self.pump.write('0')
 
     def write_buf(self, sender, to):
+        self.pump.write('0')
+
+    def get_transcript(self, sender):
         self.pump.write('0')

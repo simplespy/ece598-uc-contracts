@@ -36,7 +36,6 @@ class SimBACrash(UCAdversary):
     def func_msg(self, msg):
         """
         Forward messages from the functionality to the environment.
-
         Args:
             msg (tuple): message from the functionality
         """
@@ -114,17 +113,22 @@ class SimBACrash(UCAdversary):
     def add_msg(self, to, msg):
         self.msgBuf[to].append(msg)
 
+    def dedup(self, sender):
+        self.msgBuf[sender] = list(set(self.msgBuf[sender]))
+
     def a2f(self, msg):
         if msg[0] == 'getBuf':
             x, pid = msg[1:]
             if x == 2:
                 self.simulate_1()
+                self.dedup(pid)
                 self.write(ch='a2z',
                            msg=('P2A', (pid, ('msgBuf', self.msgBuf[pid]))))
                 self.msgBuf[pid] = []
 
             elif x == 1:
                 self.simulate_2()
+                self.dedup(pid)
                 self.write(ch='a2z',
                            msg=('P2A', (pid, ('msgBuf', self.msgBuf[pid]))))
                 self.msgBuf[pid] = []

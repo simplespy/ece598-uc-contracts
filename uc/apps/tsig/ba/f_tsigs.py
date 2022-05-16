@@ -21,6 +21,7 @@ class F_tsigs(UCFunctionality):
         self.party_msgs['getBuf2'] = self.tsig2.get_buf
         self.party_msgs['leak'] = self.leak
         self.party_msgs['evaluate'] = self.evaluate
+        self.party_msgs['broadcast'] = self.broadcast
 
         self.party_msgs['sendmsg'] = self.sendmsg
         self.adv_msgs['getBuf'] = self.get_buf
@@ -62,6 +63,11 @@ class F_tsigs(UCFunctionality):
             for i in self.ro_cnt[r]:
                 self.tsig1.add_msg(i, ('hash', r, self.ro_table[r]))
         self.write(ch='f2p', msg=(sender, -1))
+
+    def broadcast(self, sender, msg):
+        for i in range(1, self.n + 1):
+            self.tsig1.add_msg(i, msg)
+        self.write('f2p', (sender, ('done',)))
 
 
 
@@ -129,10 +135,15 @@ class F_tsig(UCFunctionality):
         self.msgBuf[to].append(msg)
 
     def get_buf(self, sender):
+        self.dedup(sender)
         self.write('f2p', (sender, ('msgBuf', self.msgBuf[sender])))
         self.msgBuf[sender] = []
 
+    def dedup(self, sender):
+        self.msgBuf[sender] = list(set(self.msgBuf[sender]))
+
     def get_buf_adv(self, sender):
+        self.dedup(sender)
         if sender in self.crupt:
             self.write('f2p', (sender, ('msgBuf', self.msgBuf[sender])))
             self.msgBuf[sender] = []
@@ -140,6 +151,7 @@ class F_tsig(UCFunctionality):
             self.write('f2a', (sender, ('msgBuf', self.msgBuf[sender])))
 
     def write_buf(self, sender, buf):
+        self.dedup(sender)
         self.msgBuf[sender] = buf
-        self.write('f2a', (sender, ('newBuf', self.msgBuf[sender])))
+        self.write('f2a', (sender, ('msgBuf', self.msgBuf[sender])))
 

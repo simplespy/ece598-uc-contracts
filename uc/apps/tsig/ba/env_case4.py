@@ -41,7 +41,6 @@ def env_case1(k, static, z2p, z2f, z2a, a2z, f2z, p2z, pump):
             if i in crupt: continue
             z2p.write((i, (f'getBuf', x)))
             m = waits(pump)
-            print('[env] get buf returns', m)
 
         print('[env] red buf from adv')
         for i in crupt:
@@ -55,7 +54,7 @@ def env_case1(k, static, z2p, z2f, z2a, a2z, f2z, p2z, pump):
 
     adv_vote = 0
 
-    z2a.write(('A2F', ('vote', vid, adv_vote)))
+    z2a.write(('A2F', ('vote', vid, adv_vote, )))
     waits(pump)
 
     for i in range(t, n + 1):
@@ -69,28 +68,28 @@ def env_case1(k, static, z2p, z2f, z2a, a2z, f2z, p2z, pump):
         z2a.write(('A2F', ('getBuf', 2, i)))
         m = waits(a2z)
         tasks = m[1][1][1]
-        z2a.write(('A2F', ('writeBuf', 2, i, tasks[:4])))
-        m = waits(a2z)
-        new_tasks = m[1][1][1]
+        tasks.remove(('signature', ('pre', 0, (1, 1))))
+        z2a.write(('A2F', ('writeBuf', 2, i, tasks)))
+        waits(a2z)
 
     for i in [3, 4]:
         z2a.write(('A2F', ('getBuf', 2, i)))
         m = waits(a2z)
         tasks = m[1][1][1]
-        tasks.pop(1)
-        tasks.pop(1)
-        print(tasks)
+        tasks.remove(('signature', ('pre', 0, (1, 0))))
         z2a.write(('A2F', ('writeBuf', 2, i, tasks)))
-        m = waits(a2z)
-        new_tasks = m[1][1][1]
+        waits(a2z)
 
     read_buf(2)
-    for i in range(5): read_buf(1)
+    for i in range(8): read_buf(1)
 
     for i in range(t + 1, n + 1):
         print(f'[env] party {i} getOutput')
         z2p.write((i, ('getOutput', vid)))
         waits(pump)
+
+    #z2p.write((1, ('getTranscript', )))
+    #waits(pump)
 
   #  gevent.kill(g1)
     gevent.kill(g2)
