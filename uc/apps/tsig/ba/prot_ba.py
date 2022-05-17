@@ -33,7 +33,7 @@ class BA_Prot(UCProtocol):
         self.prevote_cnt = defaultdict(set)
         self.mainvote_cnt = defaultdict(set)
         self.msgs = []
-        self.debug = False
+        self.debug = True
         self.signatures = defaultdict(set)
         self.coin = {}
         self.log = defaultdict(list)
@@ -123,6 +123,7 @@ class BA_Prot(UCProtocol):
     def recv_sign(self, fro, msg):
         if self.debug: print(f'[Pba, {self.pid}] process sign', msg)
         type, round, (vid, b) = msg
+        if vid in self.outputs: return 'vid already has output'
         msg = (type, (vid, round))
         if type == 'pre' and round == 0:
             self.initial_sign_cnt1[msg].add(fro)
@@ -144,7 +145,7 @@ class BA_Prot(UCProtocol):
         if self.debug: print(f'[Pba {self.pid}] process signature', _msg)
         type, round, (vid, value) = _msg
         self.signatures[vid].add(_msg)
-
+        if vid in self.outputs: return 'vid already has output'
         msg = (type, (vid, round))
         if type == 'pre' and len(self.initial_sign_cnt1[msg]) >= 2 * self.t + 1 and round == 0:
             if vid not in self.log: return 'not receive vote'
@@ -206,4 +207,4 @@ class BA_Prot(UCProtocol):
         self.pump.write('0')
 
     def get_transcript(self):
-        self.write('p2z', self.transcript)
+        self.write('p2z', set(self.transcript))

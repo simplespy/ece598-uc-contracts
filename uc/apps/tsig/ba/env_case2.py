@@ -5,7 +5,7 @@ import secp256k1 as secp
 import time
 
 def env_crash(k, static, z2p, z2f, z2a, a2z, f2z, p2z, pump):
-    print('\033[94m[ env_honest ]\033[0m')
+    print('\033[94m[ env_crash ]\033[0m')
 
     n = 4
     c = 2
@@ -112,7 +112,7 @@ from uc.execuc import execUC
 from f_tsigs import F_tsigs
 from f_ba import F_ba
 from prot_ba import BA_Prot
-from sim_ba import SimBACrash
+from sim_ba import SimBA
 
 print('\nreal\n')
 treal = execUC(
@@ -129,7 +129,7 @@ tideal = execUC(
     env_crash,
     F_ba,
     DummyParty,
-    SimBACrash
+    SimBA
 )
 
 distinguisher(tideal, treal)

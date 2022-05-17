@@ -151,7 +151,6 @@ class F_tsig(UCFunctionality):
             self.write('f2a', (sender, ('msgBuf', self.msgBuf[sender])))
 
     def write_buf(self, sender, buf):
-        self.dedup(sender)
         self.msgBuf[sender] = buf
         self.write('f2a', (sender, ('msgBuf', self.msgBuf[sender])))
 

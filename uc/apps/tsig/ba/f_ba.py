@@ -48,7 +48,6 @@ class F_ba(UCFunctionality):
                 self.output(vid, b)
 
     def vote_by_adv(self, vid, b):
-        print('[FBA] set adv input')
         self.adv_vote[vid] = b
         self.pump.write('')
 
@@ -65,10 +64,10 @@ class F_ba(UCFunctionality):
         self.msgBuf[to].append(msg)
 
     def get_buf(self, sender, x):
-        self.pump.write('0')
+        self.pump.write('')
 
     def write_buf(self, sender, to):
-        self.pump.write('0')
+        self.pump.write('')
 
     def get_transcript(self, sender):
-        self.pump.write('0')
+        self.write('f2a', ('getTranscript', sender))

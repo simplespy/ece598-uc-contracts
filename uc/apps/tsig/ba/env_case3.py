@@ -5,8 +5,8 @@ import secp256k1 as secp
 import time
 
 
-def env_case1(k, static, z2p, z2f, z2a, a2z, f2z, p2z, pump):
-    print('\033[94m[ env_honest ]\033[0m')
+def env_case3(k, static, z2p, z2f, z2a, a2z, f2z, p2z, pump):
+    print('\033[94m[ env_case3 ]\033[0m')
 
     n = 4
     c = 2
@@ -47,6 +47,7 @@ def env_case1(k, static, z2p, z2f, z2a, a2z, f2z, p2z, pump):
             z2a.write(('A2F', ('getBuf', x, i)))
             waits(pump)
 
+    #g1 = gevent.spawn(_a2z)
     g2 = gevent.spawn(_p2z)
 
     vid = 1
@@ -64,15 +65,7 @@ def env_case1(k, static, z2p, z2f, z2a, a2z, f2z, p2z, pump):
         transcript.append('p2z: ' + str(m))
         msgs.append(m)
 
-    for i in [1, 2]:
-        z2a.write(('A2F', ('getBuf', 2, i)))
-        m = waits(a2z)
-        tasks = m[1][1][1]
-        tasks.remove(('signature', ('pre', 0, (1, 1))))
-        z2a.write(('A2F', ('writeBuf', 2, i, tasks)))
-        waits(a2z)
-
-    for i in [3, 4]:
+    for i in [1, 2, 3, 4]:
         z2a.write(('A2F', ('getBuf', 2, i)))
         m = waits(a2z)
         tasks = m[1][1][1]
@@ -88,6 +81,15 @@ def env_case1(k, static, z2p, z2f, z2a, a2z, f2z, p2z, pump):
         z2p.write((i, ('getOutput', vid)))
         waits(pump)
 
+    z2p.write((1, ('getTranscript',)))
+    try:
+        m = waits(a2z)
+        transcript.append('p2z: ' + str(m))
+        msgs.append(m)
+    except:
+        pass
+
+    #gevent.kill(g1)
     gevent.kill(g2)
 
     print('transcript', transcript)
@@ -130,12 +132,12 @@ from uc.execuc import execUC
 from f_tsigs import F_tsigs
 from f_ba import F_ba
 from prot_ba import BA_Prot
-from sim_ba import SimBACrash
+from sim_ba import SimBA
 
 print('\nreal\n')
 treal = execUC(
     128,
-    env_case1,
+    env_case3,
     F_tsigs,
     BA_Prot,
     DummyAdversary
@@ -144,10 +146,10 @@ treal = execUC(
 print('\nideal\n')
 tideal = execUC(
     128,
-    env_case1,
+    env_case3,
     F_ba,
     DummyParty,
-    SimBACrash
+    SimBA
 )
 
 distinguisher(tideal, treal)

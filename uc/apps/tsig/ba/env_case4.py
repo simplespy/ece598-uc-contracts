@@ -5,8 +5,8 @@ import secp256k1 as secp
 import time
 
 
-def env_case1(k, static, z2p, z2f, z2a, a2z, f2z, p2z, pump):
-    print('\033[94m[ env_honest ]\033[0m')
+def env_schedule(k, static, z2p, z2f, z2a, a2z, f2z, p2z, pump):
+    print('\033[94m[ env_schedule ]\033[0m')
 
     n = 4
     c = 2
@@ -81,17 +81,23 @@ def env_case1(k, static, z2p, z2f, z2a, a2z, f2z, p2z, pump):
         waits(a2z)
 
     read_buf(2)
-    for i in range(8): read_buf(1)
+    print('-' * 50)
+    for i in range(4):
+        read_buf(1)
+        print('-' * 50)
 
     for i in range(t + 1, n + 1):
         print(f'[env] party {i} getOutput')
         z2p.write((i, ('getOutput', vid)))
         waits(pump)
 
-    #z2p.write((1, ('getTranscript', )))
-    #waits(pump)
-
-  #  gevent.kill(g1)
+    z2p.write((1, ('getTranscript',)))
+    try:
+        m = waits(a2z)
+        transcript.append('p2z: ' + str(m))
+        msgs.append(m)
+    except:
+        pass
     gevent.kill(g2)
 
     print('transcript', transcript)
@@ -134,12 +140,12 @@ from uc.execuc import execUC
 from f_tsigs import F_tsigs
 from f_ba import F_ba
 from prot_ba import BA_Prot
-from sim_ba import SimBACrash
+from sim_ba import SimBA
 
 print('\nreal\n')
 treal = execUC(
     128,
-    env_case1,
+    env_schedule,
     F_tsigs,
     BA_Prot,
     DummyAdversary
@@ -148,10 +154,10 @@ treal = execUC(
 print('\nideal\n')
 tideal = execUC(
     128,
-    env_case1,
+    env_schedule,
     F_ba,
     DummyParty,
-    SimBACrash
+    SimBA
 )
 
 distinguisher(tideal, treal)
